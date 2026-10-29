@@ -58,7 +58,7 @@ Mở http://localhost:4173 và giữ Terminal chạy. AI mặc định chưa tri
 
 Repo mục tiêu: https://github.com/tuannguyen-tkd/DaiNganSongNgu
 
-Repo còn trống khi kiểm tra. Kết nối GitHub đã được đề nghị nhưng chưa xác nhận, nên chưa có push hoặc Pages production được kiểm chứng. Thu hồi token đã gửi qua chat và tạo quyền mới qua kênh bí mật phù hợp. Không đặt token vào URL remote hoặc tệp dự án.
+Repo trống trước khi đồng bộ bản này. Mã đã được push lên nhánh `main`; GitHub Pages production chưa xuất bản vì token hiện tại không có quyền cấu hình Pages. Thu hồi token đã gửi qua chat và tạo quyền mới qua kênh bí mật phù hợp. Không đặt token vào URL remote hoặc tệp dự án.
 
 Đăng nhập GitHub qua VS Code/Git credential manager hoặc `gh auth login` trên máy của bạn. Nếu đang ở checkout đúng repo đã có commit:
 
@@ -94,7 +94,7 @@ Thiếu quyền Cloudflare thì chỉ xuất bản phần học liệu, không t
 
 Nếu triển khai từ máy quản trị, chạy `npx wrangler login`, đặt `CLOUDFLARE_ACCOUNT_ID` trong môi trường Terminal rồi chạy `npm run deploy:worker` với `AI_ENABLED=true`. Có biến môi trường `GEMINI_API_KEY` thì script nạp vào Worker secret. Cloudflare có thể yêu cầu đăng ký subdomain Workers trên dashboard trước. Script không bịa URL nếu chưa có subdomain. Xuất bản lại `site/` sau khi cấu hình được tạo.
 
-Chưa có Gemini API key hợp lệ được cấu hình trong môi trường thực thi lần sửa này. Chưa có cuộc gọi tính phí hoặc deploy production được xác minh. Phần cuối cần kết nối tài khoản/secrets hợp lệ.
+Chưa có Gemini API key được nạp vào Worker trong lần triển khai này. Chưa có cuộc gọi tính phí hoặc deploy production được xác minh. Phần cuối cần Cloudflare API token hợp lệ và GitHub token có quyền cấu hình Pages, Actions secrets/variables.
 
 ## Giới hạn và chi phí
 
