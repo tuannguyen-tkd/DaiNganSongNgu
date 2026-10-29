@@ -58,7 +58,7 @@ Mở http://localhost:4173 và giữ Terminal chạy. AI mặc định chưa tri
 
 Repo mục tiêu: https://github.com/tuannguyen-tkd/DaiNganSongNgu
 
-Repo trống trước khi đồng bộ bản này. Mã đã được push lên nhánh `main`; GitHub Pages production chưa xuất bản vì token hiện tại không có quyền cấu hình Pages. Thu hồi token đã gửi qua chat và tạo quyền mới qua kênh bí mật phù hợp. Không đặt token vào URL remote hoặc tệp dự án.
+Repo trống trước khi đồng bộ bản này. Mã đã được push lên nhánh `main`; Pages được cấu hình dùng GitHub Actions. Kiểm tra URL cuối trước khi coi website đã xuất bản. Thu hồi token đã gửi qua chat và tạo quyền mới qua kênh bí mật phù hợp. Không đặt token vào URL remote hoặc tệp dự án.
 
 Đăng nhập GitHub qua VS Code/Git credential manager hoặc `gh auth login` trên máy của bạn. Nếu đang ở checkout đúng repo đã có commit:
 
@@ -82,19 +82,13 @@ Nếu repo đã có thay đổi mới, pull/merge trước, không force-push.
 ## Tự triển khai và gán URL Worker
 
 1. Trong repo, chọn **Settings → Pages → Source → GitHub Actions**.
-2. Trong **Settings → Secrets and variables → Actions**, thêm secrets riêng:
-   - `CLOUDFLARE_API_TOKEN`: token mới, giới hạn đúng tài khoản và quyền sửa Worker cần dùng.
-   - `CLOUDFLARE_ACCOUNT_ID`: Account ID thật, không phải token hay tên Worker.
-   - `GEMINI_API_KEY`: khóa Gemini API do quản trị viên giữ.
-3. Biến Actions `AI_ENABLED` mặc định là `true` theo yêu cầu triển khai. Chỉ sử dụng AI với đối tượng phù hợp điều khoản Gemini API; cần xác nhận điều kiện sử dụng trước khi cho học sinh truy cập.
-4. Chạy workflow **Deploy Dai Ngan Song Ngu** hoặc push main.
-5. Workflow kiểm tra mã, deploy `dai-ngan-tutor`, lấy URL workers.dev thực từ Wrangler, kiểm tra `/health`, tự ghi `/api/tutor-chat` vào cấu hình của Pages artifact rồi xuất bản `site/`.
+2. Workflow **Deploy Dai Ngan Song Ngu** kiểm tra mã và xuất bản `site/`. Workflow không nhận khóa Gemini hay Cloudflare.
+3. Từ máy quản trị, giữ `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`, `GEMINI_API_KEY` trong môi trường tạm thời và chạy `npm run deploy:worker` với `AI_ENABLED=true`. Script nạp Gemini key trực tiếp qua stdin vào Worker secret, lấy URL workers.dev thực từ Wrangler, kiểm tra `/health` và ghi URL công khai vào `site/public-config.js`.
+4. Kiểm tra `site/public-config.js` chỉ chứa URL công khai, rồi commit và push tệp đó. Workflow sẽ xuất bản lại Pages từ mã đã push.
 
-Thiếu quyền Cloudflare thì chỉ xuất bản phần học liệu, không tạo URL giả. Có quyền nhưng deploy lỗi thì job dừng. Khóa truyền qua stdin tới `wrangler secret put`, không chèn vào JS/HTML. URL mới được tạo trong artifact mỗi lần chạy, không cần commit ngược cấu hình bằng Actions. Lấy link Pages đã hoạt động từ kết quả job, không coi địa chỉ dự kiến là website đã chạy.
+Không đưa Gemini key vào GitHub Actions secrets, Git, URL remote, HTML hay JavaScript phía trình duyệt. Script không bịa URL nếu Cloudflare chưa trả URL thật. Cloudflare có thể yêu cầu đăng ký subdomain Workers trên dashboard trước. Chỉ sử dụng AI với đối tượng phù hợp điều khoản Gemini API; cần xác nhận điều kiện sử dụng trước khi cho học sinh truy cập.
 
-Nếu triển khai từ máy quản trị, chạy `npx wrangler login`, đặt `CLOUDFLARE_ACCOUNT_ID` trong môi trường Terminal rồi chạy `npm run deploy:worker` với `AI_ENABLED=true`. Có biến môi trường `GEMINI_API_KEY` thì script nạp vào Worker secret. Cloudflare có thể yêu cầu đăng ký subdomain Workers trên dashboard trước. Script không bịa URL nếu chưa có subdomain. Xuất bản lại `site/` sau khi cấu hình được tạo.
-
-Chưa có Gemini API key được nạp vào Worker trong lần triển khai này. Chưa có cuộc gọi tính phí hoặc deploy production được xác minh. Phần cuối cần Cloudflare API token hợp lệ và GitHub token có quyền cấu hình Pages, Actions secrets/variables.
+Chưa có Gemini API key được nạp vào Worker trong lần triển khai này. Chưa có cuộc gọi tính phí hoặc deploy Worker production được xác minh. Phần cuối cần Cloudflare API token hợp lệ.
 
 ## Giới hạn và chi phí
 
