@@ -1,0 +1,32 @@
+/* Stable shell: no page-specific sidebar width and no duplicated navigation. */
+:root{--sb-w:clamp(170px,16vw,245px)}
+html,body{margin:0;min-width:0}#dn-shell{min-height:100dvh}#view{margin-left:var(--sb-w);min-width:0;min-height:100dvh}#app{min-width:0}
+#sb{position:fixed;inset:0 auto 0 0;z-index:100;width:var(--sb-w);height:100dvh;overflow:hidden;box-sizing:border-box;border-right:4px solid #ce9143;background:repeating-linear-gradient(3deg,#f1cb7a09 0 23px,#673c2014 24px 26px),linear-gradient(90deg,#9e612f,#b47739 48%,#995b2c);font-family:SchoolNunito,Nunito,'Segoe UI',Arial,sans-serif;color:#722a12}
+#sb *{box-sizing:border-box}#sb button{font:inherit;cursor:pointer;touch-action:manipulation}#sb .dn-brand{display:block;width:100%;padding:0;margin:0;border:0;background:none;aspect-ratio:260/195}#sb .dn-brand svg{display:block;width:100%;height:100%}#sb nav{display:flex;flex-direction:column;gap:9px;padding:5px 10px 16px}#sb .dn-nav-button{display:flex;align-items:center;gap:8px;width:100%;min-height:56px;padding:7px 9px;border:3px solid #ffdda1;border-radius:24px;box-shadow:0 3px 0 #713e20,inset 0 1px #fff7dd;background:linear-gradient(#fffaf0,#ffe3b0);color:#722a12;font-size:clamp(13px,1.35vw,21px);font-weight:900;line-height:1.15;text-align:left}#sb .dn-nav-button:hover{filter:brightness(1.05)}#sb .dn-nav-button.dn-active{color:#fff;border-color:#ffec20;background:linear-gradient(#30da48,#00a32b 68%,#008f22);text-shadow:0 1px #006d28;box-shadow:0 3px 0 #6a421a,0 0 7px #d5fc6470,inset 0 1px #e9ffb5}#sb .dn-nav-icon,#sb .dn-nav-emoji{width:40px;height:40px;flex:0 0 40px;display:grid;place-items:center;font-size:30px;filter:drop-shadow(0 1px 1px #70401655)}#sb .dn-motto{padding:0 14px 15px;text-align:center;color:#fff6da;font-weight:800;font-size:16px}#sb button:focus-visible{outline:3px solid #fff;outline-offset:2px}
+/* Old wrappers still own their visual design, but no longer reserve a navigation column. */
+#view :is(.layout.v2,.school500-screen,.pg-screen,.c3-screen,.vu-app,.tp-app,.bk-app){grid-template-columns:minmax(0,1fr);min-width:0}
+#view :is(.st-app,.gr-app){display:block;min-width:0}
+#view :is(.main,.school500-main,.pg-main,.c3-main,.vu-main,.tp-main,.st-main,.gr-main,.bk-main){width:100%;min-width:0;margin-left:0;grid-column:1}
+#view :is(aside.sidebar,aside.school500-sidebar,aside.pg-sidebar,aside.c3-sidebar,aside.vu-sidebar,aside.tp-sidebar,aside.st-sidebar,aside.gr-sidebar,aside.bk-sidebar,.sb-home-menu){display:none}
+#view .hm-shell{overflow:hidden}#view .hm-home{width:118.4%;max-width:none;margin-left:-18.4%;overflow:hidden}#view .hm-art{width:100%}
+#dn-speaking.sp500{left:var(--sb-w);width:calc(100% - var(--sb-w));grid-template-columns:minmax(0,1fr)}#dn-speaking.sp500>.sp5-main{grid-column:1}#dn-speaking.sp500>.sp5-sidebar{display:none}
+#bk-guide-button{left:calc(var(--sb-w) + 12px)}
+#dn-tutor .dt-panel{max-height:80dvh;width:min(440px,calc(100vw - 24px));overflow:hidden}#dn-tutor .bk-tutor-source{flex-shrink:0}#dn-tutor .dt-log{min-height:90px;overflow:auto}#dn-tutor .dt-tools,#dn-tutor .dt-config{display:none}
+@media(max-width:760px){:root{--sb-w:82px}#sb{border-right-width:2px}#sb nav{padding:4px 5px 12px;gap:7px}#sb .dn-nav-button{flex-direction:column;justify-content:center;gap:3px;padding:6px 3px;min-height:65px;border-width:2px;border-radius:17px;font-size:10px;text-align:center}#sb .dn-nav-icon,#sb .dn-nav-emoji{width:29px;height:29px;flex-basis:29px;font-size:25px}#sb .dn-motto{font-size:11px;padding:5px}#view .st-sidebar,#view .gr-sidebar{display:none}#view .st-main{padding-left:0}#view .bk-main{padding:10px 8px 80px}#view .hm-home{min-width:0}#dn-tutor .dt-panel{height:76dvh;max-height:76dvh}#bk-guide-button{max-width:calc(100vw - var(--sb-w) - 25px);font-size:12px}}
+@media(prefers-reduced-motion:reduce){#sb *{transition:none}}
+#dn-tutor .dn-source-note{display:block;margin-top:7px;color:#54725b;font-size:11px}
+/* All navigation rows share the available viewport height; no nested scrolling. */
+#sb{display:flex;flex-direction:column;overflow:hidden}
+#sb .dn-brand{flex:0 0 auto;height:min(15dvh,calc(var(--sb-w) * .75));aspect-ratio:auto}
+#sb nav{display:grid;grid-template-rows:repeat(13,minmax(0,1fr));flex:1;min-height:0;overflow:visible;gap:clamp(2px,.55dvh,6px);padding:3px 8px 6px}
+#sb .dn-nav-button{min-height:0;height:100%;padding:2px 7px;border-width:2px;border-radius:18px;gap:6px;font-size:clamp(10px,1.9dvh,18px);line-height:1.05}
+#sb .dn-nav-icon,#sb .dn-nav-emoji{width:clamp(18px,3.6dvh,32px);height:clamp(18px,3.6dvh,32px);flex-basis:clamp(18px,3.6dvh,32px);font-size:clamp(17px,3dvh,27px)}
+#sb .dn-nav-icon svg{width:100%;height:100%}
+#sb .dn-motto{flex:0 0 auto;font-size:clamp(9px,1.5dvh,13px);line-height:1.1;padding:2px 5px 5px;margin:0}
+@media(max-width:760px){
+ #sb nav{padding:2px 4px 5px;gap:clamp(1px,.4dvh,4px)}
+ #sb .dn-nav-button{padding:1px 2px;gap:1px;font-size:clamp(8px,1.3dvh,10px);border-radius:12px;line-height:1.05}
+ #sb .dn-nav-icon,#sb .dn-nav-emoji{width:clamp(14px,2.6dvh,22px);height:clamp(14px,2.6dvh,22px);flex:0 0 auto;font-size:clamp(14px,2.5dvh,21px)}
+ #sb .dn-motto{font-size:8px}
+}
+@media(max-height:480px){#sb .dn-brand{height:8dvh}#sb .dn-motto{display:none}#sb .dn-nav-button{flex-direction:row;font-size:8px;gap:3px}#sb .dn-nav-icon,#sb .dn-nav-emoji{width:14px;height:14px;flex:0 0 14px;font-size:12px}}

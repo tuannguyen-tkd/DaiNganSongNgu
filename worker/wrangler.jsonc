@@ -1,0 +1,20 @@
+{
+  "$schema": "../node_modules/wrangler/config-schema.json",
+  "name": "dai-ngan-tutor",
+  "main": "index.mjs",
+  "compatibility_date": "2026-10-29",
+  "compatibility_flags": ["nodejs_compat"],
+  "workers_dev": true,
+  "preview_urls": false,
+  "observability": {"enabled": false},
+  "vars": {
+    "ALLOWED_ORIGIN": "https://tuannguyen-tkd.github.io",
+    "GEMINI_MODEL": "gemini-3.5-flash-lite",
+    "AI_ENABLED": "true",
+    "GLOBAL_DAILY_LIMIT": "150",
+    "CLIENT_DAILY_LIMIT": "30"
+  },
+  "ratelimits": [{"name":"TUTOR_RATE","namespace_id":"104729","simple":{"limit":6,"period":60}}],
+  "durable_objects":{"bindings":[{"name":"TUTOR_BUDGET","class_name":"TutorBudget"}]},
+  "migrations":[{"tag":"v1","new_sqlite_classes":["TutorBudget"]}]
+}

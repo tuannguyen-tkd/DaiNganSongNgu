@@ -1,0 +1,13 @@
+import fs from 'node:fs';import path from 'node:path';import vm from 'node:vm';import assert from 'node:assert/strict';
+const root=path.resolve('site'),files=fs.readdirSync(root);
+for(const file of files.filter(x=>x.endsWith('.js')))new vm.Script(fs.readFileSync(path.join(root,file),'utf8'),{filename:file});
+const html=fs.readFileSync(path.join(root,'index.html'),'utf8');for(const m of html.matchAll(/(?:src|href)="(\.\/[^"#]+)"/g))assert(fs.existsSync(path.join(root,m[1])),'Missing '+m[1]);
+const manifest=JSON.parse(fs.readFileSync('source-manifest.json','utf8'));
+for(const f of manifest.files)assert(fs.existsSync(path.join(root,f.path)),'Missing '+f.path);
+const publicCode=files.filter(x=>/\.(html|css|js)$/.test(x)).map(x=>fs.readFileSync(path.join(root,x),'utf8')).join('\n');
+assert(!/data:(?:image|font)\/[^;]+;base64,/.test(publicCode));
+assert(!/(?:sk-(?:proj-)?[A-Za-z0-9_-]{25,}|gh[pousr]_[A-Za-z0-9]{20,}|cfat_[A-Za-z0-9_-]{20,})/.test(publicCode),'Secret-looking value');
+const core=fs.readFileSync('site/app-core.js','utf8'),tutor=fs.readFileSync('site/tutor.js','utf8');
+for(const marker of ['id="dt-endpoint"','data-dt="settings"','data-dt="clear"','data-dt="stop"'])assert(!core.includes(marker));
+assert.equal((core+tutor).match(/(?:async function dtRemote\(|dtRemote=async function\()/g)?.length,1);
+console.log('Browser syntax, assets, removed controls, one transport, no public secrets: OK');
