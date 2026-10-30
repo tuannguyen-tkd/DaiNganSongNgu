@@ -93,7 +93,7 @@ Worker đã triển khai tại `https://dai-ngan-tutor.tkd-studio.workers.dev`; 
 
 ## Âm thanh qua API
 
-Nút nghe gọi `/api/audio/tts` qua Worker với `gemini-3.8-flash-lite-tts`. Hai lựa chọn trong Cài đặt là giọng nữ English US và English UK lấy từ Gemini Voices API. Nút luyện nói ghi tối đa 9 giây, gửi bản ghi ngắn qua `/api/audio/transcribe` tới `gemini-3.5-transcribe`, dùng bản chép lời để so với câu học như trước. Đây là so khớp văn bản, không phải đánh giá phát âm chi tiết. Các bản ghi chỉ để nghe lại trên máy trong mục luyện nói riêng vẫn giữ tại thiết bị và không gửi lên API.
+Nút nghe gọi `/api/audio/tts` qua Worker với `gemini-3.8-flash-lite-tts`. Hai lựa chọn trong Cài đặt là giọng nữ English US và English UK lấy từ Gemini Voices API. Khi API hết lượt hoặc lỗi kết nối, trình duyệt dùng một trong hai giọng Google US/UK English nếu có và báo trạng thái; không tự chọn giọng khác. Một phản hồi 429 từ Gemini được ghi nhớ trong ngày để các lượt nghe sau không phải chờ API lần nữa. Nút luyện nói ghi tối đa 9 giây, gửi bản ghi ngắn qua `/api/audio/transcribe` tới `gemini-3.5-transcribe`, dùng bản chép lời để so với câu học như trước. Đây là so khớp văn bản, không phải đánh giá phát âm chi tiết. Các bản ghi chỉ để nghe lại trên máy trong mục luyện nói riêng vẫn giữ tại thiết bị và không gửi lên API.
 
 Worker chỉ chấp nhận Origin của Pages, giới hạn bản ghi dưới 1 MB, áp dụng 12 lượt âm thanh/phút/IP, tối đa 40 lượt/ngày/IP và 100 lượt âm thanh/ngày toàn trang. Hạn mức âm thanh tách khỏi gia sư. Tệp tạm tải lên Gemini Files API được xóa sau khi nhận dạng. Khóa Gemini chỉ ở Worker secret. Âm thanh gửi tới Google để xử lý; Free Tier có hạn mức thực tế theo tài khoản, cần kiểm tra Usage trên AI Studio. Nghe và nhận dạng qua API cần Internet. Không bật micro khi chưa có thao tác và đồng ý trong giao diện.
 
@@ -118,12 +118,12 @@ Không xóa localStorage cũ, nhưng `file://`, localhost và Pages là các ori
 
 ## Kiểm thử
 
-- **17 kiểm thử Node đạt**: các kiểm thử gia sư trước đây cùng ba kiểm thử API âm thanh (giọng nữ, chép lời/xóa tệp tạm, chặn origin và dữ liệu không hợp lệ).
+- **20 kiểm thử Node đạt**: các kiểm thử gia sư trước đây, ba kiểm thử API âm thanh và ba kiểm thử phát giọng trong trình duyệt.
 - `npm run check` đạt: cú pháp classic script, đường dẫn ảnh, ba nút đã xóa, một transport, không có khóa thật trong mã public.
 - `npm run worker:dry-run` đạt với Wrangler 4.155.0, có Rate Limit và SQLite Durable Object. Worker thật đã triển khai và trả một câu hỏi thử qua Gemini.
 - Browser: mở Home, Từ vựng, sáu trò chơi, mười truyện/đọc chậm, popup Luyện nói, Kho sách. Sidebar desktop giữ 218,08 px và cùng cây menu khi chuyển trang. Câu hỏi “pencil nghĩa là gì?” hiển thị riêng và trả học liệu có nhãn rõ.
 - Sidebar đã đo trong các khung 1366×768, 1280×600, 390×800 và 844×390: đủ 13 mục, chiều cao scrollHeight bằng clientHeight, không bị cắt nội dung nút. Chưa phải thiết bị thật.
-- Đã kiểm tra Gemini thật tạo hai giọng US/UK và chép lại một câu mẫu; Worker production trả HTTP 200 cho hai luồng đó. Chưa thử micro trên thiết bị người dùng, mọi thao tác cũ, PDF riêng, toàn bộ chấm điểm hay di chuyển hồ sơ giữa origin. Chưa kiểm chứng hạn mức thanh toán/chi phí thực tế.
+- Đã kiểm tra Gemini thật tạo hai giọng US/UK và chép lại một câu mẫu; Worker production trả HTTP 200 cho hai luồng đó. Sau các lượt kiểm thử, Gemini TTS trả 429 và nêu hạn mức Free Tier hiện tại là 10 yêu cầu/ngày cho model này; cần kiểm tra hạn mức trước khi dùng rộng rãi. Chưa thử micro trên thiết bị người dùng, mọi thao tác cũ, PDF riêng, toàn bộ chấm điểm hay di chuyển hồ sơ giữa origin. Chưa kiểm chứng hạn mức thanh toán/chi phí thực tế.
 
 ## Nguồn kỹ thuật đối chiếu 30/10/2026
 
