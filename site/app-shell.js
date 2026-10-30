@@ -8,6 +8,24 @@ const DN_NAV=[
 ];
 (function(){
  const side=document.getElementById('sb');
+ // The home artwork still contains the old labels. Replace their click targets
+ // with one account control shared by every page.
+ for(const label of ['Học offline','Đăng nhập / chọn hồ sơ']){
+  const index=hmHomeActions.findIndex(item=>item[0]===label);
+  if(index!==-1)hmHomeActions.splice(index,1);
+ }
+ const account=document.createElement('button');
+ account.id='dn-account';account.type='button';
+ document.getElementById('view').prepend(account);
+ const accountMenu=document.createElement('div');
+ accountMenu.id='dn-account-menu';accountMenu.hidden=true;
+ accountMenu.innerHTML='<button type="button" data-account-action="profile">Hồ sơ và cài đặt</button><button type="button" data-account-action="logout">Đăng xuất</button>';
+ account.after(accountMenu);
+ function closeAccountMenu(){accountMenu.hidden=true;if(state.user)account.setAttribute('aria-expanded','false');else account.removeAttribute('aria-expanded')}
+ account.addEventListener('click',()=>{if(!state.user){openAuth();return}accountMenu.hidden=!accountMenu.hidden;account.setAttribute('aria-expanded',String(!accountMenu.hidden))});
+ accountMenu.addEventListener('click',e=>{const action=e.target.closest('[data-account-action]')?.dataset.accountAction;if(!action)return;closeAccountMenu();if(action==='profile')goto('settings');else logout()});
+ document.addEventListener('click',e=>{if(!account.contains(e.target)&&!accountMenu.contains(e.target))closeAccountMenu()});
+ document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!accountMenu.hidden){closeAccountMenu();account.focus()}});
  const icon=(name)=>{const item=SB_LINKS.find(x=>x[3]===name);return item?sbSvg(item[2],'dn-nav-icon',name):'<span class="dn-nav-emoji" aria-hidden="true">'+name+'</span>'};
  side.innerHTML=`<button type="button" class="dn-brand" aria-label="Đại Ngàn Song Ngữ – Trang chủ"><svg viewBox="0 0 260 195" aria-hidden="true"><image href="${esc(HM_HOME_URL)}" width="1672" height="941"/></svg></button><nav aria-label="Điều hướng Đại Ngàn Song Ngữ">${DN_NAV.map(([id,label,art])=>`<button type="button" class="dn-nav-button" data-page="${id}" title="${label}">${icon(art)}<span>${label}</span></button>`).join('')}</nav><p class="dn-motto">Cùng nhau học tốt<br>vươn tới tương lai!</p>`;
  function navigate(page){if(document.getElementById('dn-speaking'))dnClose();goto(page)}
@@ -15,6 +33,11 @@ const DN_NAV=[
  side.querySelector('nav').addEventListener('click',e=>{const b=e.target.closest('[data-page]');if(b)navigate(b.dataset.page)});
  const generatedSidebars='aside.sidebar,aside.school500-sidebar,aside.pg-sidebar,aside.c3-sidebar,aside.sp5-sidebar,aside.vu-sidebar,aside.tp-sidebar,aside.st-sidebar,aside.gr-sidebar,aside.bk-sidebar,.sb-home-menu';
  function sync(){
+  const user=state.user;
+  closeAccountMenu();
+  account.textContent=user?`👤 ${user.name} · Hồ sơ học tập`:'👤 Đăng nhập / Chọn hồ sơ';
+  account.title=user?'Xem hồ sơ học tập':'Đăng nhập hoặc chọn hồ sơ học tập';
+  account.setAttribute('aria-label',account.title);
   document.querySelectorAll('#app '+generatedSidebars.split(',').join(',#app ')).forEach(x=>x.remove());
   document.querySelectorAll('#dn-speaking .sp5-sidebar').forEach(x=>x.remove());
   const active=document.getElementById('dn-speaking')?'speaking':state.page==='quiz'?'games':state.page==='subjects'?'vocab':state.page;
