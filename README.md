@@ -14,7 +14,7 @@ Bản sửa từ `Dai-Ngan-Song-Ngu-da-sua(2).html`, 80.379.884 byte, SHA-256 `9
 
 ## Bảo toàn
 
-Dữ liệu học tập nhúng được so sánh JSON trước/sau, trừ ánh xạ ảnh đổi đường dẫn. Giữ 1.000 từ, 500 mẫu ngữ pháp, 10 truyện và câu hỏi, 500 mẫu giao tiếp, trò chơi, chấm điểm, hồ sơ/localStorage, ghi âm/nhận dạng vốn có, sách/OCR và tốc độ đọc truyện 0,65/0,85/1. Luyện nói riêng vẫn dùng kịch bản cũ, không tự chuyển thành hội thoại AI.
+Dữ liệu học tập nhúng được so sánh JSON trước/sau, trừ ánh xạ ảnh đổi đường dẫn. Giữ 1.000 từ, 500 mẫu ngữ pháp, 10 truyện và câu hỏi, 500 mẫu giao tiếp, trò chơi, chấm điểm, hồ sơ/localStorage, ghi âm nghe lại trên thiết bị, sách/OCR và tốc độ đọc truyện 0,65/0,85/1. Nhận dạng câu nói đã chuyển sang Gemini API; cơ chế so khớp câu và kịch bản luyện nói vẫn giữ nguyên.
 
 ## Dịch vụ AI
 
@@ -118,12 +118,12 @@ Không xóa localStorage cũ, nhưng `file://`, localhost và Pages là các ori
 
 ## Kiểm thử
 
-- **14 kiểm thử Node đạt**: ngân hàng dữ liệu/sidebar, origin, thiếu khóa, role/model giả, dữ liệu riêng tư, SDK Gemini với upstream giả lập, safetySettings, hỏi tiếp, quota bền vững, lỗi 401/429/5xx, timeout, JSON quá dài, câu trả lời bị chặn/cắt ngắn/hỏng định dạng.
+- **17 kiểm thử Node đạt**: các kiểm thử gia sư trước đây cùng ba kiểm thử API âm thanh (giọng nữ, chép lời/xóa tệp tạm, chặn origin và dữ liệu không hợp lệ).
 - `npm run check` đạt: cú pháp classic script, đường dẫn ảnh, ba nút đã xóa, một transport, không có khóa thật trong mã public.
 - `npm run worker:dry-run` đạt với Wrangler 4.155.0, có Rate Limit và SQLite Durable Object. Worker thật đã triển khai và trả một câu hỏi thử qua Gemini.
 - Browser: mở Home, Từ vựng, sáu trò chơi, mười truyện/đọc chậm, popup Luyện nói, Kho sách. Sidebar desktop giữ 218,08 px và cùng cây menu khi chuyển trang. Câu hỏi “pencil nghĩa là gì?” hiển thị riêng và trả học liệu có nhãn rõ.
 - Sidebar đã đo trong các khung 1366×768, 1280×600, 390×800 và 844×390: đủ 13 mục, chiều cao scrollHeight bằng clientHeight, không bị cắt nội dung nút. Chưa phải thiết bị thật.
-- Chưa kiểm thử mọi thao tác cũ, micro/giọng đọc thật, PDF riêng, toàn bộ chấm điểm hay di chuyển hồ sơ giữa origin. Chưa kiểm chứng hạn mức thanh toán/chi phí thực tế.
+- Đã kiểm tra Gemini thật tạo hai giọng US/UK và chép lại một câu mẫu; Worker production trả HTTP 200 cho hai luồng đó. Chưa thử micro trên thiết bị người dùng, mọi thao tác cũ, PDF riêng, toàn bộ chấm điểm hay di chuyển hồ sơ giữa origin. Chưa kiểm chứng hạn mức thanh toán/chi phí thực tế.
 
 ## Nguồn kỹ thuật đối chiếu 30/10/2026
 
