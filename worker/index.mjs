@@ -17,10 +17,79 @@ export function validate(body){
 function clean(text,max){return String(text||'').replace(/https?:\/\/\S+|\b[\w.%+\/-]+\.pdf\b/gi,'').trim().slice(0,max)}
 function json(data,status=200,origin=''){return new Response(JSON.stringify(data),{status,headers:{'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store','X-Content-Type-Options':'nosniff','Vary':'Origin',...(origin?{'Access-Control-Allow-Origin':origin}:{})}})}
 function error(status,code,message,origin){return json({error:{code,message}},status,origin)}
+async function reserveAudio(request,env){
+ if(!env.GEMINI_API_KEY||env.AI_ENABLED!=='true')throw new ClientError(503,'NOT_CONFIGURED','Âm thanh trực tuyến chưa được bật.');
+ if(!env.AUDIO_RATE||!env.TUTOR_BUDGET)throw new ClientError(503,'LIMIT_CONFIG','Máy chủ chưa cấu hình bộ giới hạn.');
+ const ip=request.headers.get('CF-Connecting-IP');if(!ip)throw new ClientError(503,'NETWORK_ID','Chưa xác định được phiên mạng.');
+ const id=await hashIP(ip,env.GEMINI_API_KEY);
+ if(!(await env.AUDIO_RATE.limit({key:id})).success)throw new ClientError(429,'RATE','Em thao tác hơi nhanh. Chờ một phút nhé.');
+ const guard=env.TUTOR_BUDGET.get(env.TUTOR_BUDGET.idFromName('audio-v1'));
+ const quota=await guard.fetch('https://budget/reserve',{method:'POST',body:JSON.stringify({id,purpose:'audio'})});
+ if(quota.status===429)throw new ClientError(429,'DAILY_LIMIT','Hôm nay đã tới hạn mức âm thanh. Em thử lại ngày mai nhé.');
+ if(!quota.ok)throw new ClientError(503,'LIMIT_STORAGE','Bộ giới hạn chưa sẵn sàng.');
+}
+function audioError(e,origin){
+ if(e instanceof ClientError)return error(e.status,e.code,e.message,origin);
+ if(e?.status===401||e?.status===403)return error(503,'AI_AUTH','Cần kiểm tra cấu hình âm thanh trên máy chủ.',origin);
+ if(e?.status===429)return error(429,'AI_LIMIT','Dịch vụ âm thanh đã tới hạn mức. Em thử lại sau nhé.',origin);
+ console.error('AUDIO_UNAVAILABLE',{name:String(e?.name||'unknown').slice(0,60),status:Number(e?.status)||null});
+ return error(503,'AUDIO_UNAVAILABLE','Chưa dùng được âm thanh trực tuyến. Em thử lại sau nhé.',origin);
+}
+let voiceCache=null;
+async function voiceFor(client,locale){
+ if(!voiceCache)voiceCache=Promise.all(['en-US','en-GB'].map(async language_code=>{
+  const result=await client.voices.list({language_code:[language_code],gender:['female'],type:['prebuilt'],page_size:100});
+  const voices=result.voices||[];return voices.find(v=>v.language_code===language_code&&String(v.gender).toLowerCase()==='female')?.id||null;
+ })).catch(e=>{voiceCache=null;throw e});
+ const [us,uk]=await voiceCache;const selected=locale==='en-GB'?uk:us;
+ if(!selected)throw new ClientError(503,'VOICE_UNAVAILABLE','Chưa tìm thấy giọng nữ phù hợp.');
+ return selected;
+}
+async function handleAudio(request,env,allowed,clientFactory){
+ try{
+  const url=new URL(request.url),client=clientFactory(env);
+  if(url.pathname==='/api/audio/tts'){
+   if(request.headers.get('Content-Type')?.split(';')[0]!=='application/json')throw new ClientError(415,'CONTENT_TYPE','Yêu cầu cần định dạng JSON.');
+   const body=await boundedJSON(request),text=body?.text,locale=body?.locale;
+   if(!body||Object.keys(body).some(k=>!['text','locale'].includes(k))||typeof text!=='string'||!text.trim()||text.length>600||!['en-US','en-GB'].includes(locale))throw new ClientError(400,'PARAMETERS','Câu đọc hoặc giọng chưa hợp lệ.');
+   if(privateInfo.test(text))throw new ClientError(400,'PRIVACY','Không gửi thông tin riêng tư để đọc.');
+   await reserveAudio(request,env);
+   const voice=await voiceFor(client,locale);
+   const interaction=await client.interactions.create({model:env.TTS_MODEL||'gemini-3.8-flash-lite-tts',input:[{type:'user_input',content:[{type:'text',text:text.trim()}]}],response_format:{type:'audio'},generation_config:{speech_config:[{voice}]}});
+   const output=interaction.outputAudio||interaction.output_audio;
+   if(!output?.data||output.data.length>12000000)throw new ClientError(502,'AUDIO_RESPONSE','Chưa nhận được âm thanh.');
+   const bytes=Uint8Array.from(atob(output.data),c=>c.charCodeAt(0));
+   return new Response(bytes,{status:200,headers:{'Content-Type':output.mimeType||output.mime_type||'audio/wav','Cache-Control':'private, no-store','X-Content-Type-Options':'nosniff','Access-Control-Allow-Origin':allowed,'Vary':'Origin'}});
+  }
+  if(url.pathname==='/api/audio/transcribe'){
+   const type=request.headers.get('Content-Type')?.split(';')[0];
+   if(!['audio/webm','audio/mp4','audio/ogg','audio/wav','audio/mpeg'].includes(type))throw new ClientError(415,'CONTENT_TYPE','Định dạng ghi âm chưa được hỗ trợ.');
+   const length=Number(request.headers.get('Content-Length')||0);if(length>1000000)throw new ClientError(413,'AUDIO_LENGTH','Bản ghi quá dài.');
+   const data=await boundedAudio(request);
+   await reserveAudio(request,env);
+   let file;
+   try{
+    file=await client.files.upload({file:new Blob([data],{type}),config:{mimeType:type}});
+    const interaction=await client.interactions.create({model:env.TRANSCRIBE_MODEL||'gemini-3.5-transcribe',input:[{type:'audio',uri:file.uri,mime_type:file.mimeType||type}],generation_config:{transcription_config:{language_codes:['en-US'],mode:'verbatim'}}});
+    const transcript=String(interaction.outputText||interaction.output_text||'').trim().slice(0,500);
+    if(!transcript)throw new ClientError(422,'NO_SPEECH','Chưa nghe rõ lời nói. Em thử lại nhé.');
+    return json({transcript},200,allowed);
+   }finally{if(file?.name)await client.files.delete({name:file.name}).catch(()=>{})}
+  }
+  return error(404,'NOT_FOUND','Không tìm thấy chức năng này.',allowed);
+ }catch(e){return audioError(e,allowed)}
+}
 async function boundedJSON(request){
  const reader=request.body?.getReader();if(!reader)throw new ClientError(400,'BODY','Em nhập câu hỏi nhé.');let bytes=0,chunks=[];
  try{for(;;){const {value,done}=await reader.read();if(done)break;bytes+=value.length;if(bytes>40000){await reader.cancel();throw new ClientError(413,'BODY','Nội dung gửi quá dài.')}chunks.push(value)}}finally{reader.releaseLock()}
  const b=new Uint8Array(bytes);let offset=0;for(const c of chunks){b.set(c,offset);offset+=c.length}try{return JSON.parse(new TextDecoder().decode(b))}catch{throw new ClientError(400,'JSON','Nội dung chưa hợp lệ.')}
+}
+async function boundedAudio(request){
+ const reader=request.body?.getReader();if(!reader)throw new ClientError(413,'AUDIO_LENGTH','Chưa có bản ghi âm.');
+ const chunks=[];let size=0;
+ try{for(;;){const {value,done}=await reader.read();if(done)break;size+=value.length;if(size>1000000){await reader.cancel();throw new ClientError(413,'AUDIO_LENGTH','Bản ghi cần ngắn hơn 1 MB.')}chunks.push(value)}}finally{reader.releaseLock()}
+ if(!size)throw new ClientError(413,'AUDIO_LENGTH','Chưa có bản ghi âm.');
+ const result=new Uint8Array(size);let offset=0;for(const chunk of chunks){result.set(chunk,offset);offset+=chunk.length}return result;
 }
 async function hashIP(ip,secret){const key=await crypto.subtle.importKey('raw',new TextEncoder().encode(secret),{name:'HMAC',hash:'SHA-256'},false,['sign']);return Array.from(new Uint8Array(await crypto.subtle.sign('HMAC',key,new TextEncoder().encode(ip)))).map(x=>x.toString(16).padStart(2,'0')).join('')}
 const safe={answer:'Điều này cần một người lớn hỗ trợ. Em hãy trao đổi với thầy cô hoặc người lớn em tin tưởng nhé. Mình có thể cùng em học một câu tiếng Anh phù hợp khác. 🌱',english:'',mode:'scope'};
@@ -30,6 +99,7 @@ export function createWorker({clientFactory=env=>new GoogleGenAI({apiKey:env.GEM
  const url=new URL(request.url);
  if(request.method==='OPTIONS')return new Response(null,{status:204,headers:{'Access-Control-Allow-Origin':allowed,'Access-Control-Allow-Methods':'POST,GET,OPTIONS','Access-Control-Allow-Headers':'Content-Type','Access-Control-Max-Age':'600','Vary':'Origin'}});
  if(url.pathname==='/health'&&request.method==='GET')return json({configured:!!env.GEMINI_API_KEY&&env.AI_ENABLED==='true',provider:'gemini'},200,allowed);
+ if(request.method==='POST'&&url.pathname.startsWith('/api/audio/'))return handleAudio(request,env,allowed,clientFactory);
  if(url.pathname!=='/api/tutor-chat'||request.method!=='POST')return error(404,'NOT_FOUND','Không tìm thấy chức năng này.',allowed);
  if(request.headers.get('Content-Type')?.split(';')[0]!=='application/json')return error(415,'CONTENT_TYPE','Yêu cầu cần định dạng JSON.',allowed);
  let phase='validate';
@@ -77,13 +147,13 @@ export default createWorker();
 export class TutorBudget{
  constructor(ctx,env){this.ctx=ctx;this.env=env}
  async fetch(request){
-  if(request.method!=='POST')return new Response(null,{status:405});let id;try{({id}=await request.json())}catch{return new Response(null,{status:400})}
+  if(request.method!=='POST')return new Response(null,{status:405});let id,purpose;try{({id,purpose}=await request.json())}catch{return new Response(null,{status:400})}
   if(!/^[a-f0-9]{64}$/.test(id||''))return new Response(null,{status:400});
-  const daily=Number(this.env.GLOBAL_DAILY_LIMIT||150),per=Number(this.env.CLIENT_DAILY_LIMIT||30);
+  const daily=Number(purpose==='audio'?(this.env.AUDIO_DAILY_LIMIT||100):(this.env.GLOBAL_DAILY_LIMIT||150)),per=Number(purpose==='audio'?(this.env.CLIENT_AUDIO_DAILY_LIMIT||40):(this.env.CLIENT_DAILY_LIMIT||30));
   if(!Number.isInteger(daily)||daily<1||daily>10000||!Number.isInteger(per)||per<1||per>1000)return new Response(null,{status:503});
   const ok=await this.ctx.storage.transaction(async tx=>{
    const day=new Date().toISOString().slice(0,10),minute=Math.floor(Date.now()/60000);let b=await tx.get('usage');if(!b||b.day!==day)b={day,total:0};let c=await tx.get('client:'+id);if(!c||c.day!==day)c={day,total:0,minute,count:0};if(c.minute!==minute){c.minute=minute;c.count=0}
-   if(b.total>=daily||c.total>=per||c.count>=6)return false;
+   if(b.total>=daily||c.total>=per||c.count>=(purpose==='audio'?12:6))return false;
    b.total++;c.total++;c.count++;await tx.put('usage',b);await tx.put('client:'+id,c);return true;
   });
   // Remove stale daily client keys to bound storage; runs once per UTC day.

@@ -10,11 +10,15 @@
   "vars": {
     "ALLOWED_ORIGIN": "https://tuannguyen-tkd.github.io",
     "GEMINI_MODEL": "gemini-3.5-flash-lite",
+    "TTS_MODEL": "gemini-3.8-flash-lite-tts",
+    "TRANSCRIBE_MODEL": "gemini-3.5-transcribe",
     "AI_ENABLED": "true",
     "GLOBAL_DAILY_LIMIT": "150",
-    "CLIENT_DAILY_LIMIT": "30"
+    "CLIENT_DAILY_LIMIT": "30",
+    "AUDIO_DAILY_LIMIT": "100",
+    "CLIENT_AUDIO_DAILY_LIMIT": "40"
   },
-  "ratelimits": [{"name":"TUTOR_RATE","namespace_id":"104729","simple":{"limit":6,"period":60}}],
+  "ratelimits": [{"name":"TUTOR_RATE","namespace_id":"104729","simple":{"limit":6,"period":60}},{"name":"AUDIO_RATE","namespace_id":"104730","simple":{"limit":12,"period":60}}],
   "durable_objects":{"bindings":[{"name":"TUTOR_BUDGET","class_name":"TutorBudget"}]},
   "migrations":[{"tag":"v1","new_sqlite_classes":["TutorBudget"]}]
 }

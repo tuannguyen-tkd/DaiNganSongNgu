@@ -34,6 +34,7 @@ Dịch vụ miễn phí có thể sử dụng nội dung gửi lên để cải 
 | `site/app-core.js`, `app-core.css` | Dữ liệu, chức năng và giao diện cũ |
 | `site/app-shell.js`, `app-shell.css` | Sidebar cố định và căn chỉnh wrapper |
 | `site/tutor.js` | Hội thoại và transport duy nhất |
+| `site/audio-api.js` | Giọng đọc và nhận dạng âm thanh qua Worker |
 | `site/public-config.js` | URL công khai, không có khóa |
 | `site/assets/` | Ảnh/font đã tách |
 | `worker/index.mjs` | API và Durable Object hạn mức |
@@ -89,6 +90,12 @@ Nếu repo đã có thay đổi mới, pull/merge trước, không force-push.
 Không đưa Gemini key vào GitHub Actions secrets, Git, URL remote, HTML hay JavaScript phía trình duyệt. Script không bịa URL nếu Cloudflare chưa trả URL thật. Cloudflare có thể yêu cầu đăng ký subdomain Workers trên dashboard trước. Chỉ sử dụng AI với đối tượng phù hợp điều khoản Gemini API; cần xác nhận điều kiện sử dụng trước khi cho học sinh truy cập.
 
 Worker đã triển khai tại `https://dai-ngan-tutor.tkd-studio.workers.dev`; Gemini key đã nạp vào Worker secret, `AI_ENABLED=true`. `/health` xác nhận cấu hình và yêu cầu thử `/api/tutor-chat` đã trả HTTP 200 ở chế độ AI. Website Pages: https://tuannguyen-tkd.github.io/DaiNganSongNgu/. Workflow Pages cho commit `ea1ea92` chạy thành công; cấu hình Worker đã xuất hiện trên website và một câu hỏi thử từ giao diện nhận phản hồi AI.
+
+## Âm thanh qua API
+
+Nút nghe gọi `/api/audio/tts` qua Worker với `gemini-3.8-flash-lite-tts`. Hai lựa chọn trong Cài đặt là giọng nữ English US và English UK lấy từ Gemini Voices API. Nút luyện nói ghi tối đa 9 giây, gửi bản ghi ngắn qua `/api/audio/transcribe` tới `gemini-3.5-transcribe`, dùng bản chép lời để so với câu học như trước. Đây là so khớp văn bản, không phải đánh giá phát âm chi tiết. Các bản ghi chỉ để nghe lại trên máy trong mục luyện nói riêng vẫn giữ tại thiết bị và không gửi lên API.
+
+Worker chỉ chấp nhận Origin của Pages, giới hạn bản ghi dưới 1 MB, áp dụng 12 lượt âm thanh/phút/IP, tối đa 40 lượt/ngày/IP và 100 lượt âm thanh/ngày toàn trang. Hạn mức âm thanh tách khỏi gia sư. Tệp tạm tải lên Gemini Files API được xóa sau khi nhận dạng. Khóa Gemini chỉ ở Worker secret. Âm thanh gửi tới Google để xử lý; Free Tier có hạn mức thực tế theo tài khoản, cần kiểm tra Usage trên AI Studio. Nghe và nhận dạng qua API cần Internet. Không bật micro khi chưa có thao tác và đồng ý trong giao diện.
 
 ## Giới hạn và chi phí
 
