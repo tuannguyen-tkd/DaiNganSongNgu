@@ -3,15 +3,19 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import vm from 'node:vm';
 const source=fs.readFileSync(new URL('../site/audio-api.js',import.meta.url),'utf8');
-function browser(voice){
- const spoken=[],notices=[];let requests=0;
- const speechSynthesis={speak:u=>{spoken.push(u.text);queueMicrotask(()=>u.onend?.())},cancel:()=>{}};
+function browser(voice,{autoEnd=true}={}){
+ const spoken=[],notices=[];let requests=0,cancellations=0;
+ const speechSynthesis={speak:u=>{spoken.push(u.text);if(autoEnd)queueMicrotask(()=>u.onend?.())},cancel:()=>{cancellations++}};
  const window={DAI_NGAN_CONFIG:{tutorEndpoint:'https://worker.example/api/tutor-chat'},speechSynthesis,addEventListener:()=>{}};
  const document={addEventListener:()=>{},getElementById:()=>null,activeElement:null,body:{append:()=>{}},createElement:()=>({className:'',setAttribute:()=>{},remove:()=>{},classList:{contains:()=>false}})};
- const scope={window,document,render:()=>{},pgStop:()=>{},releaseRobotAudio:()=>{},dtPreferredVoice:()=>voice,dtSavedRate:()=>.85,notify:m=>notices.push(m),setTimeout,clearTimeout,AbortController,Response,fetch:async()=>{requests++;return Response.json({error:{message:'Dịch vụ âm thanh đã tới hạn mức.'}},{status:429})},SpeechSynthesisUtterance:class{constructor(text){this.text=text}}};
+ const scope={window,document,state:{page:'home'},render:()=>{},pgStop:()=>{},releaseRobotAudio:()=>{},dtPreferredVoice:()=>voice,dtSavedRate:()=>.85,notify:m=>notices.push(m),setTimeout,clearTimeout,AbortController,Response,fetch:async()=>{requests++;return Response.json({error:{message:'Dịch vụ âm thanh đã tới hạn mức.'}},{status:429})},SpeechSynthesisUtterance:class{constructor(text){this.text=text}}};
  vm.createContext(scope);new vm.Script(source).runInContext(scope);
- return {scope,spoken,notices,get requests(){return requests}};
+ return {scope,spoken,notices,get requests(){return requests},get cancellations(){return cancellations}};
 }
+test('navigating to another page cancels an active browser voice',async()=>{
+ const b=browser({name:'Google US English',lang:'en-US'},{autoEnd:false});b.scope.say('A longer story.');await new Promise(r=>setTimeout(r,0));const before=b.cancellations;
+ b.scope.state.page='stories';b.scope.render();assert.equal(b.cancellations,before+1);assert.deepEqual(b.spoken,['A longer story.']);
+});
 test('browser uses the selected Google voice immediately when available',async()=>{
  const b=browser({name:'Google US English',lang:'en-US'});b.scope.say('Hello, my friend.');await new Promise(r=>setTimeout(r,30));assert.deepEqual(b.spoken,['Hello, my friend.']);assert.equal(b.requests,0);assert.deepEqual(b.notices,[]);
 });

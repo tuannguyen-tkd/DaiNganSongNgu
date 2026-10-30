@@ -4,16 +4,16 @@
  const audioURL=path=>{const base=endpoint();if(!/^https:\/\/[^/]+$/.test(base))throw new Error('Âm thanh trực tuyến chưa được cấu hình.');return base+path};
  const today=()=>new Date().toISOString().slice(0,10);
  let quotaDay='';try{quotaDay=localStorage.getItem('dn-tts-quota-day')||''}catch{}
- let context=null,source=null,request=null,sequence=0,fallbackActive=false,statusNode=null;
- function status(message,bad=false){statusNode?.remove();statusNode=document.createElement('div');statusNode.className='toast '+(bad?'bad':'');statusNode.setAttribute('role','status');statusNode.textContent=message;document.body.append(statusNode)}
+ let context=null,source=null,request=null,sequence=0,fallbackActive=false,statusNode=null,settleSpeech=null;
+ function status(message,bad=false){statusNode?.remove();statusNode=document.createElement('div');statusNode.className='toast dn-audio-status '+(bad?'bad':'');statusNode.setAttribute('role','status');statusNode.textContent=message;document.body.append(statusNode)}
  function clearStatus(){statusNode?.remove();statusNode=null}
  function unlock(){const AudioContext=window.AudioContext||window.webkitAudioContext;if(!AudioContext)return;context??=new AudioContext();if(context.state==='suspended')context.resume().catch(()=>{})}
  document.addEventListener('pointerdown',unlock,{capture:true});document.addEventListener('keydown',unlock,{capture:true});
- function stop(){sequence++;request?.abort();request=null;try{source?.stop()}catch{}source=null;if(fallbackActive)window.speechSynthesis?.cancel();fallbackActive=false;clearStatus()}
+ function stop(){sequence++;request?.abort();request=null;try{source?.stop()}catch{}source=null;if(fallbackActive)window.speechSynthesis?.cancel();settleSpeech?.();settleSpeech=null;fallbackActive=false;clearStatus()}
  async function browserSpeak(parts,rate,locale,id,quota=false){
   const voice=dtPreferredVoice(locale);if(!voice)throw new Error('Gemini đã hết lượt và trình duyệt này chưa có giọng Google US/UK English.');
   fallbackActive=true;status(quota?'API âm thanh đã tới hạn mức. Đang dùng giọng Google trên trình duyệt.':'Đang phát giọng Google trên trình duyệt…');
-  for(const part of parts){if(id!==sequence)return;await new Promise((resolve,reject)=>{const u=new SpeechSynthesisUtterance(part);u.voice=voice;u.lang=voice.lang;u.rate=rate;u.onend=resolve;u.onerror=e=>reject(new Error('Giọng đọc trên trình duyệt chưa phát được: '+(e.error||'lỗi không rõ')));window.speechSynthesis.speak(u)})}
+  for(const part of parts){if(id!==sequence)return;await new Promise((resolve,reject)=>{const u=new SpeechSynthesisUtterance(part);u.voice=voice;u.lang=voice.lang;u.rate=rate;settleSpeech=resolve;u.onend=()=>{settleSpeech=null;resolve()};u.onerror=e=>{settleSpeech=null;reject(new Error('Giọng đọc trên trình duyệt chưa phát được: '+(e.error||'lỗi không rõ')))};window.speechSynthesis.speak(u)})}
   fallbackActive=false;
  }
  function selectedLocale(){let value='';try{value=localStorage.getItem('voice-uri')||''}catch{}return value==='google-uk'?'en-GB':'en-US'}
@@ -60,7 +60,8 @@
   const preview=document.getElementById('voice-preview');if(preview)preview.disabled=false;
  };
  dtPopulateVoices();
- const previousRender=render;render=function(...args){const result=previousRender.apply(this,args);dtPopulateVoices();return result};
+ let displayedPage=state.page;
+ const previousRender=render;render=function(...args){if(state.page!==displayedPage){stop();displayedPage=state.page}const result=previousRender.apply(this,args);dtPopulateVoices();return result};
  class APIRecognition{
   constructor(){this.lang='en-US';this.continuous=false;this.interimResults=false;this.maxAlternatives=1;this.onstart=null;this.onresult=null;this.onerror=null;this.onend=null;this.onspeechend=null;this.stream=null;this.recorder=null;this.timer=null;this.controller=null;this.cancelled=false;this.stopping=false}
   async start(){if(this.stream||this.recorder)return;this.cancelled=false;this.stopping=false;
