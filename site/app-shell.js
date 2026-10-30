@@ -18,14 +18,15 @@ const DN_VISIBLE_NAV=[...DN_NAV.filter(([id])=>!['books','teacher','settings'].i
  const account=document.createElement('button');
  account.id='dn-account';account.type='button';
  account.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.3"/><path d="M5.3 19.5c.7-3.6 3.1-5.4 6.7-5.4s6 1.8 6.7 5.4"/></svg><span></span>';
- document.getElementById('view').prepend(account);
+ const view=document.getElementById('view');
+ view.prepend(account);
  const accountMenu=document.createElement('div');
  accountMenu.id='dn-account-menu';accountMenu.hidden=true;
  accountMenu.innerHTML='<button type="button" data-account-action="profile">Hồ sơ và cài đặt</button><button type="button" data-account-action="logout">Đăng xuất</button>';
  account.after(accountMenu);
  function closeAccountMenu(){accountMenu.hidden=true;if(state.user)account.setAttribute('aria-expanded','false');else account.removeAttribute('aria-expanded')}
- account.addEventListener('click',()=>{if(!state.user){openAuth();return}accountMenu.hidden=!accountMenu.hidden;account.setAttribute('aria-expanded',String(!accountMenu.hidden))});
- accountMenu.addEventListener('click',e=>{const action=e.target.closest('[data-account-action]')?.dataset.accountAction;if(!action)return;closeAccountMenu();if(action==='profile')goto('settings');else logout()});
+ account.addEventListener('click',()=>{if(!state.user){if(document.getElementById('dn-speaking'))dnClose();openAuth();return}accountMenu.hidden=!accountMenu.hidden;account.setAttribute('aria-expanded',String(!accountMenu.hidden))});
+ accountMenu.addEventListener('click',e=>{const action=e.target.closest('[data-account-action]')?.dataset.accountAction;if(!action)return;closeAccountMenu();if(action==='profile')navigate('settings');else{if(document.getElementById('dn-speaking'))dnClose();logout()}});
  document.addEventListener('click',e=>{if(!account.contains(e.target)&&!accountMenu.contains(e.target))closeAccountMenu()});
  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!accountMenu.hidden){closeAccountMenu();account.focus()}});
  const icon=(name)=>{const item=SB_LINKS.find(x=>x[3]===name);return item?sbSvg(item[2],'dn-nav-icon',name):'<span class="dn-nav-emoji" aria-hidden="true">'+name+'</span>'};
@@ -55,6 +56,7 @@ const DN_VISIBLE_NAV=[...DN_NAV.filter(([id])=>!['books','teacher','settings'].i
   document.querySelectorAll('#app '+generatedSidebars.split(',').join(',#app ')).forEach(x=>x.remove());
   document.querySelectorAll('#dn-speaking .sp5-sidebar').forEach(x=>x.remove());
   watchImages(document.body);
+  if(state.page==='settings')dtPopulateVoices();
   const active=document.getElementById('dn-speaking')?'speaking':state.page==='quiz'?'games':state.page==='subjects'?'vocab':state.page;
   for(const b of side.querySelectorAll('[data-page]')){const on=b.dataset.page===active;b.classList.toggle('dn-active',on);if(on)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current')}
   document.body.classList.toggle('dn-speaking-open',!!document.getElementById('dn-speaking'));
@@ -63,7 +65,7 @@ const DN_VISIBLE_NAV=[...DN_NAV.filter(([id])=>!['books','teacher','settings'].i
  }
  sbMount=sync;
  const oldRender=render;render=function(...args){const result=oldRender.apply(this,args);sync();return result};
- const oldOpen=dnOpen;dnOpen=function(...args){const result=oldOpen.apply(this,args);sync();return result};
- const oldClose=dnClose;dnClose=function(...args){const result=oldClose.apply(this,args);sync();return result};
+ const oldOpen=dnOpen;dnOpen=function(...args){const result=oldOpen.apply(this,args);const hero=document.querySelector('#dn-speaking.sp500 .sp5-hero');if(hero){hero.querySelector('#dn-close')?.remove();hero.append(account,accountMenu);account.focus()}sync();return result};
+ const oldClose=dnClose;dnClose=function(...args){if(account.parentElement!==view){view.prepend(account);account.after(accountMenu)}const result=oldClose.apply(this,args);sync();return result};
  sync();
 })();

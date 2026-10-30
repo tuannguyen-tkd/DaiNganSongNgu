@@ -2,15 +2,26 @@
 #view{position:relative;--dn-banner-h:clamp(180px,17vw,220px)}
 #view :is(.vu-banner,.pg-banner,.gr-banner,.bk-hero,.tp-hero,.c3-hero,.s500-hero,.st-banner){height:var(--dn-banner-h)!important;min-height:0!important;max-height:none;aspect-ratio:auto!important;box-sizing:border-box;overflow:hidden}
 #view .vu-banner{background-size:119.77077% calc(var(--dn-banner-h) * 2.7758)}
+#view .vu-banner{background-image:url('./assets/vocab-banner-clean.webp')}
 #view .pg-banner{background-size:117.1689% calc(var(--dn-banner-h) * 3.5112)}
 #view .tp-hero{background-size:116.35351% calc(var(--dn-banner-h) * 3.4218)}
+#view .tp-evaluation .tp-hero{background-image:url('./assets/evaluation-banner-clean.webp')}
+#view .tp-settings .tp-hero{background-image:url('./assets/settings-banner-clean.webp')}
 #view .tp-settings .tp-hero{background-size:116.35351% calc(var(--dn-banner-h) * 3.764)}
 #view .s500-hero{background-size:117.1689% calc(var(--dn-banner-h) * 3.3369)}
+#view .s500-hero{background-image:url('./assets/lessons-banner-clean.webp')}
+#dn-speaking.sp500 .sp5-hero{background-image:url('./assets/speaking-banner-clean.webp')}
+#dn-speaking.sp500 #dn-close{display:none!important}
+#dn-speaking.sp500 #dn-account{top:8px;right:12px;min-height:44px;border:3px solid #fff4d5;border-radius:999px;padding:7px 14px;background:linear-gradient(145deg,#8b4a24,#643418);color:#fff8e8;font:900 14px SchoolNunito,Nunito,'Segoe UI',sans-serif}
+#dn-speaking.sp500 #dn-account-menu{top:60px;right:12px}
+#dn-speaking.sp500 #dn-account-menu button{min-height:0;width:100%;padding:10px;border:0;border-radius:10px;background:transparent;color:#603719;font:800 14px SchoolNunito,Nunito,'Segoe UI',sans-serif}
 #view .st-banner{background-size:117.25% calc(var(--dn-banner-h) * 4.6584)}
 #view .c3-hero{background-size:119.77077% calc(var(--dn-banner-h) * 5.6687)}
 #view .gr-banner svg{height:100%}
 #view .bk-main{padding-top:0}
 #view .bk-hero{display:flex;flex-direction:column;justify-content:center}
+#view .gr-card-art{top:5px;right:5px;width:38%}
+#view .gr-card-art img{display:block;width:100%;height:100%;object-fit:contain;object-position:right bottom}
 
 /* One account entry point, with the same label and action on every page. */
 #dn-account{position:absolute;z-index:60;top:8px;right:12px;display:flex;align-items:center;justify-content:center;gap:8px;min-height:44px;max-width:min(240px,calc(100% - 24px));padding:7px 14px;border:3px solid #fff4d5;border-radius:999px;background:linear-gradient(145deg,#8b4a24,#643418);box-shadow:0 3px 0 #5c3217,0 6px 18px #47250b55;color:#fff8e8;font:900 14px SchoolNunito,Nunito,'Segoe UI',sans-serif;white-space:nowrap;cursor:pointer}
