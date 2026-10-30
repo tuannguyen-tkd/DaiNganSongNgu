@@ -13,10 +13,13 @@
 #view .bk-hero{display:flex;flex-direction:column;justify-content:center}
 
 /* One account entry point, with the same label and action on every page. */
-#dn-account{position:absolute;z-index:60;top:8px;right:12px;min-height:48px;max-width:min(390px,calc(100% - 24px));padding:8px 17px;border:3px solid #fff4d5;border-radius:999px;background:linear-gradient(145deg,#8b4a24,#643418);box-shadow:0 3px 0 #5c3217,0 6px 18px #47250b55;color:#fff8e8;font:900 14px SchoolNunito,Nunito,'Segoe UI',sans-serif;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer}
+#dn-account{position:absolute;z-index:60;top:8px;right:12px;display:flex;align-items:center;justify-content:center;gap:8px;min-height:44px;max-width:min(240px,calc(100% - 24px));padding:7px 14px;border:3px solid #fff4d5;border-radius:999px;background:linear-gradient(145deg,#8b4a24,#643418);box-shadow:0 3px 0 #5c3217,0 6px 18px #47250b55;color:#fff8e8;font:900 14px SchoolNunito,Nunito,'Segoe UI',sans-serif;white-space:nowrap;cursor:pointer}
+#dn-account svg{width:21px;height:21px;flex:none;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}#dn-account span{overflow:hidden;text-overflow:ellipsis}
 #dn-account:hover{filter:brightness(1.08)}#dn-account:focus-visible{outline:3px solid #fce458;outline-offset:3px}
 #dn-account-menu[hidden]{display:none}#dn-account-menu{position:absolute;z-index:61;top:62px;right:12px;width:220px;padding:8px;border:2px solid #d8ac64;border-radius:16px;background:#fffaf0;box-shadow:0 8px 20px #44301b55}#dn-account-menu button{display:block;width:100%;padding:10px;border:0;border-radius:10px;background:transparent;color:#603719;font:800 14px SchoolNunito,Nunito,'Segoe UI',sans-serif;text-align:left;cursor:pointer}#dn-account-menu button:hover,#dn-account-menu button:focus-visible{background:#f8e2b7}
-#view:has(.hm-home) #dn-account{width:min(390px,calc(100% - 24px));background:linear-gradient(145deg,#9c6232,#663719)}
+#view:has(.hm-home) #dn-account{background:linear-gradient(145deg,#9c6232,#663719)}
+#view .hm-home::before{content:"";position:absolute;z-index:1;left:67%;top:0;width:33%;height:9%;background:#36aeef url('./assets/home-sky-clean.webp') right top/303.0303% auto no-repeat;pointer-events:none}
+#view .tp-teacher-link{display:none!important}
 #view :is(.vu-login,.s500-login,.tp-account){display:none!important}
 #view .topbar :is(.pill,.chip[onclick="logout()"]){display:none!important}
 
@@ -29,8 +32,11 @@
 
 /* Fixed helper buttons need a final scroll area below every page. */
 #view #app::after{content:"";display:block;height:clamp(104px,14dvh,144px)}
-@media(max-width:760px){#dn-account{top:8px;right:8px;max-width:calc(100% - 16px);min-height:42px;padding:6px 10px;font-size:11px}#view:has(.hm-home) #dn-account{width:calc(100% - 16px)}#view .bk-hero{padding:10px}#view .bk-hero h1{font-size:clamp(22px,6vw,32px)}}
+img.dn-image-loading{background:#e4f0e9 linear-gradient(100deg,#e4f0e9 15%,#fff9e5 45%,#e4f0e9 75%) 0 0/200% 100%;animation:dn-image-shimmer 1.2s ease-in-out infinite}
+@keyframes dn-image-shimmer{to{background-position-x:-200%}}
+@media(prefers-reduced-motion:reduce){img.dn-image-loading{animation:none}}
+@media(max-width:760px){#dn-account{top:8px;right:8px;max-width:calc(100% - 16px);min-height:42px;padding:6px 10px;font-size:11px}#view .bk-hero{padding:10px}#view .bk-hero h1{font-size:clamp(22px,6vw,32px)}}
 @media(max-width:760px){#bk-guide-button{bottom:calc(82px + env(safe-area-inset-bottom))}#dn-tutor .dt-launch{bottom:calc(12px + env(safe-area-inset-bottom))}#view #app::after{height:170px}}
-@media(max-width:760px){#view{--dn-banner-h:210px}#view:not(:has(.hm-home)){padding-top:50px;background:linear-gradient(#bdeaf5 0 50px,transparent 50px)}#view:not(:has(.hm-home)) #dn-account{top:4px}#view .bk-summary{gap:3px 5px}#view .bk-summary span{padding:3px 7px;font-size:10px}}
+@media(max-width:760px){#view{--dn-banner-h:210px;padding-top:50px;background:linear-gradient(#bdeaf5 0 50px,transparent 50px)}#view #dn-account{top:4px}#view .bk-summary{gap:3px 5px}#view .bk-summary span{padding:3px 7px;font-size:10px}}
 @media(max-width:760px){#dn-account-menu{top:48px;right:8px;width:min(220px,calc(100% - 16px))}}
 @media(max-width:760px){#view .bk-hero small{font-size:9px;letter-spacing:1px}#view .bk-hero h1{font-size:21px;line-height:1.08;margin:3px 0}#view .bk-hero p{font-size:12px;line-height:1.25;margin:3px 0}#view .bk-summary{margin-top:5px}}
