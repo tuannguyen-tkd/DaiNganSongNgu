@@ -1,7 +1,7 @@
 import fs from 'node:fs';import path from 'node:path';import vm from 'node:vm';import assert from 'node:assert/strict';
 const root=path.resolve('site'),files=fs.readdirSync(root);
 for(const file of files.filter(x=>x.endsWith('.js')))new vm.Script(fs.readFileSync(path.join(root,file),'utf8'),{filename:file});
-const html=fs.readFileSync(path.join(root,'index.html'),'utf8');for(const m of html.matchAll(/(?:src|href)="(\.\/[^"#]+)"/g))assert(fs.existsSync(path.join(root,m[1])),'Missing '+m[1]);
+const html=fs.readFileSync(path.join(root,'index.html'),'utf8');for(const m of html.matchAll(/(?:src|href)="(\.\/[^"#]+)"/g)){const file=m[1].split('?')[0];assert(fs.existsSync(path.join(root,file)),'Missing '+file)}
 const manifest=JSON.parse(fs.readFileSync('source-manifest.json','utf8'));
 for(const f of manifest.files)assert(fs.existsSync(path.join(root,f.path)),'Missing '+f.path);
 const publicCode=files.filter(x=>/\.(html|css|js)$/.test(x)).map(x=>fs.readFileSync(path.join(root,x),'utf8')).join('\n');
