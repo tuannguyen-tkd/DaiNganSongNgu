@@ -8,10 +8,13 @@ const deployed=await wrangler(['deploy','--config','worker/wrangler.jsonc','--va
 const url=deployed.match(/https:\/\/dai-ngan-tutor\.[a-z0-9-]+\.workers\.dev\b/i)?.[0];
 if(!url)throw new Error('Wrangler chưa trả URL workers.dev. Không ghi cấu hình URL giả.');
 if(process.env.GEMINI_API_KEY)await wrangler(['secret','put','GEMINI_API_KEY','--config','worker/wrangler.jsonc'],process.env.GEMINI_API_KEY+'\n');
-const status=await fetch(url+'/health',{headers:{Origin:'https://tuannguyen-tkd.github.io'},signal:AbortSignal.timeout(20000)});
-if(!status.ok)throw new Error('Worker chưa trả health hợp lệ. Giữ nguyên cấu hình web cũ.');
-const health=await status.json();
-if(enabled&&health.configured!==true)throw new Error('Worker chưa xác nhận AI được bật và Gemini secret đã cấu hình. Giữ nguyên cấu hình web cũ.');
+const deadline=Date.now()+60000;
+let health;
+for(;;){
+ try{const status=await fetch(url+'/health?check='+Date.now(),{headers:{Origin:'https://tuannguyen-tkd.github.io'},signal:AbortSignal.timeout(10000)});if(status.ok){health=await status.json();if(!enabled||health.configured===true)break}}catch{}
+ if(Date.now()>=deadline)throw new Error('Worker chưa xác nhận AI được bật và Gemini secret đã cấu hình. Giữ nguyên cấu hình web cũ.');
+ await new Promise(resolve=>setTimeout(resolve,2000));
+}
 await fs.writeFile(path.join(root,'site/public-config.js'),'// Generated from a verified deployment. No secret values.\nwindow.DAI_NGAN_CONFIG=Object.freeze('+JSON.stringify({tutorEndpoint:url+'/api/tutor-chat',deployment:'worker-deployed',aiConfigured:health.configured===true})+');\n');
 console.log('Worker: '+url+'; AI configured: '+String(health.configured===true));
 console.log('Đã tự gán URL trong site/public-config.js. Xuất bản lại Pages để nhận cấu hình mới.');

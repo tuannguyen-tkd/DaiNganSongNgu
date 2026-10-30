@@ -38,7 +38,7 @@ Dịch vụ miễn phí có thể sử dụng nội dung gửi lên để cải 
 | `site/assets/` | Ảnh/font đã tách |
 | `worker/index.mjs` | API và Durable Object hạn mức |
 | `worker/wrangler.jsonc` | Cấu hình Cloudflare, không chứa bí mật |
-| `.github/workflows/pages.yml` | Tự triển khai Worker, gán URL và Pages |
+| `.github/workflows/pages.yml` | Kiểm thử và xuất bản Pages khi push; Worker triển khai từ máy quản trị |
 | `source-manifest.json` | Hash nguồn và danh mục ảnh |
 
 ## Chạy trên máy
@@ -52,7 +52,7 @@ npm run check
 npm run dev
 ```
 
-Mở http://localhost:4173 và giữ Terminal chạy. AI mặc định chưa triển khai; tra học liệu vẫn dùng được. Cần giữ cả thư mục, không gửi riêng `index.html`. Không nhấp đúp HTML để kỳ vọng có backend. Muốn dựng lại từ nguồn, cài Pillow rồi chạy `python3 tools/split-source.py DUONG_DAN_HTML_GOC`; người sử dụng thông thường không cần chạy bước này.
+Mở http://localhost:4173 và giữ Terminal chạy. Bản checkout đã có URL Worker công khai trong `site/public-config.js`; tra học liệu vẫn dùng được khi AI lỗi. Cần giữ cả thư mục, không gửi riêng `index.html`. Không nhấp đúp HTML để kỳ vọng có backend. Muốn dựng lại từ nguồn, cài Pillow rồi chạy `python3 tools/split-source.py DUONG_DAN_HTML_GOC`; người sử dụng thông thường không cần chạy bước này.
 
 ## Đẩy lên repo
 
@@ -88,7 +88,7 @@ Nếu repo đã có thay đổi mới, pull/merge trước, không force-push.
 
 Không đưa Gemini key vào GitHub Actions secrets, Git, URL remote, HTML hay JavaScript phía trình duyệt. Script không bịa URL nếu Cloudflare chưa trả URL thật. Cloudflare có thể yêu cầu đăng ký subdomain Workers trên dashboard trước. Chỉ sử dụng AI với đối tượng phù hợp điều khoản Gemini API; cần xác nhận điều kiện sử dụng trước khi cho học sinh truy cập.
 
-Chưa có Gemini API key được nạp vào Worker trong lần triển khai này. Chưa có cuộc gọi tính phí hoặc deploy Worker production được xác minh. Phần cuối cần Cloudflare API token hợp lệ.
+Worker đã triển khai tại `https://dai-ngan-tutor.tkd-studio.workers.dev`; Gemini key đã nạp vào Worker secret, `AI_ENABLED=true`. `/health` xác nhận cấu hình và yêu cầu thử `/api/tutor-chat` đã trả HTTP 200 ở chế độ AI. Website Pages: https://tuannguyen-tkd.github.io/DaiNganSongNgu/. Sau khi cập nhật URL Worker trong `site/public-config.js`, cần xác nhận workflow Pages mới đã chạy thành công và cấu hình mới đã xuất hiện trên website.
 
 ## Giới hạn và chi phí
 
@@ -113,10 +113,10 @@ Không xóa localStorage cũ, nhưng `file://`, localhost và Pages là các ori
 
 - **14 kiểm thử Node đạt**: ngân hàng dữ liệu/sidebar, origin, thiếu khóa, role/model giả, dữ liệu riêng tư, SDK Gemini với upstream giả lập, safetySettings, hỏi tiếp, quota bền vững, lỗi 401/429/5xx, timeout, JSON quá dài, câu trả lời bị chặn/cắt ngắn/hỏng định dạng.
 - `npm run check` đạt: cú pháp classic script, đường dẫn ảnh, ba nút đã xóa, một transport, không có khóa thật trong mã public.
-- `npm run worker:dry-run` đạt với Wrangler 4.155.0, có Rate Limit và SQLite Durable Object. Dry run không phải deploy thật.
+- `npm run worker:dry-run` đạt với Wrangler 4.155.0, có Rate Limit và SQLite Durable Object. Worker thật đã triển khai và trả một câu hỏi thử qua Gemini.
 - Browser: mở Home, Từ vựng, sáu trò chơi, mười truyện/đọc chậm, popup Luyện nói, Kho sách. Sidebar desktop giữ 218,08 px và cùng cây menu khi chuyển trang. Câu hỏi “pencil nghĩa là gì?” hiển thị riêng và trả học liệu có nhãn rõ.
 - Sidebar đã đo trong các khung 1366×768, 1280×600, 390×800 và 844×390: đủ 13 mục, chiều cao scrollHeight bằng clientHeight, không bị cắt nội dung nút. Chưa phải thiết bị thật.
-- Chưa kiểm thử mọi thao tác cũ, micro/giọng đọc thật, PDF riêng, toàn bộ chấm điểm hay di chuyển hồ sơ giữa origin. Chưa kiểm thử Gemini thật, tài khoản thanh toán, quyền deploy hoặc URL production.
+- Chưa kiểm thử mọi thao tác cũ, micro/giọng đọc thật, PDF riêng, toàn bộ chấm điểm hay di chuyển hồ sơ giữa origin. Chưa kiểm chứng hạn mức thanh toán/chi phí thực tế.
 
 ## Nguồn kỹ thuật đối chiếu 30/10/2026
 
