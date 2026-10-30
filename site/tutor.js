@@ -1,5 +1,5 @@
 /* Fixed deployment endpoint. Never accepts a browser-entered URL or API key. */
-let dnTutorLastMode='Tra học liệu có sẵn · chưa kết nối AI';
+let dnTutorLastMode=window.DAI_NGAN_CONFIG?.aiConfigured&&window.DAI_NGAN_CONFIG?.tutorEndpoint?'Gia sư AI · sẵn sàng kết nối':'Tra học liệu có sẵn · chưa kết nối AI';
 async function dtRemote(query,signal){
  const endpoint=window.DAI_NGAN_CONFIG?.tutorEndpoint;
  if(!endpoint||!/^https:\/\//.test(endpoint)||!/^https?:$/.test(location.protocol))throw new Error('AI chưa được triển khai.');

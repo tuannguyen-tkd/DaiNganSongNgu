@@ -88,7 +88,7 @@ Nếu repo đã có thay đổi mới, pull/merge trước, không force-push.
 
 Không đưa Gemini key vào GitHub Actions secrets, Git, URL remote, HTML hay JavaScript phía trình duyệt. Script không bịa URL nếu Cloudflare chưa trả URL thật. Cloudflare có thể yêu cầu đăng ký subdomain Workers trên dashboard trước. Chỉ sử dụng AI với đối tượng phù hợp điều khoản Gemini API; cần xác nhận điều kiện sử dụng trước khi cho học sinh truy cập.
 
-Worker đã triển khai tại `https://dai-ngan-tutor.tkd-studio.workers.dev`; Gemini key đã nạp vào Worker secret, `AI_ENABLED=true`. `/health` xác nhận cấu hình và yêu cầu thử `/api/tutor-chat` đã trả HTTP 200 ở chế độ AI. Website Pages: https://tuannguyen-tkd.github.io/DaiNganSongNgu/. Sau khi cập nhật URL Worker trong `site/public-config.js`, cần xác nhận workflow Pages mới đã chạy thành công và cấu hình mới đã xuất hiện trên website.
+Worker đã triển khai tại `https://dai-ngan-tutor.tkd-studio.workers.dev`; Gemini key đã nạp vào Worker secret, `AI_ENABLED=true`. `/health` xác nhận cấu hình và yêu cầu thử `/api/tutor-chat` đã trả HTTP 200 ở chế độ AI. Website Pages: https://tuannguyen-tkd.github.io/DaiNganSongNgu/. Workflow Pages cho commit `ea1ea92` chạy thành công; cấu hình Worker đã xuất hiện trên website và một câu hỏi thử từ giao diện nhận phản hồi AI.
 
 ## Giới hạn và chi phí
 
